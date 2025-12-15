@@ -8,13 +8,21 @@
     "start": "next start"
   },
   "dependencies": {
+    "@handsontable/react": "^16.2.0",
+    "@supabase/supabase-js": "^2.83.0",
+    "handsontable": "^16.2.0",
+    "lucide-react": "^0.554.0",
     "next": "16.0.3",
+    "papaparse": "^5.5.3",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "react-spinners": "^0.17.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/papaparse": "^5.5.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
