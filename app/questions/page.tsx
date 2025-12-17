@@ -21,8 +21,14 @@ interface Question {
 }
 
 // Helper function to detect and embed videos
+// ✅ FIXED: Now handles BOTH images AND videos
 const getVideoEmbed = (url: string, className: string) => {
   if (!url) return null;
+
+  // Check for image files FIRST
+  if (url.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i)) {
+    return <img src={url} alt="Media" className={className} />;
+  }
 
   // YouTube
   if (url.includes("youtube.com") || url.includes("youtu.be")) {
@@ -54,7 +60,7 @@ const getVideoEmbed = (url: string, className: string) => {
   }
 
   // Direct video file
-  if (url.includes(".mp4") || url.includes(".webm") || url.includes(".ogg")) {
+  if (url.match(/\.(mp4|webm|ogg)$/i)) {
     return <video src={url} controls className={className} />;
   }
 
@@ -82,6 +88,8 @@ export default function QuestionsPage() {
   const [mediaFilter, setMediaFilter] = useState<"ALL" | "WITH" | "WITHOUT">(
     "ALL"
   );
+  const [mediaQuestion, setMediaQuestion] = useState<Question | null>(null);
+  const [mediaUrlInput, setMediaUrlInput] = useState("");
 
   useEffect(() => {
     fetchQuestions();
@@ -467,19 +475,8 @@ export default function QuestionsPage() {
                                 : "🖼️ Image"}
                             </span>
                             <button
-                              onClick={() => {
-                                const input = document.createElement("input");
-                                input.type = "file";
-                                input.accept = "image/*,video/*";
-                                input.onchange = (e) => {
-                                  const file = (e.target as HTMLInputElement)
-                                    .files?.[0];
-                                  if (file)
-                                    uploadMediaForQuestion(question, file);
-                                };
-                                input.click();
-                              }}
-                              className="text-xs text-gray-600 hover:text-gray-900 underline"
+                              onClick={() => handleEdit(question)}
+                              className="text-xs underline text-gray-600 hover:text-gray-900"
                             >
                               Change
                             </button>
@@ -487,23 +484,16 @@ export default function QuestionsPage() {
                         ) : (
                           <button
                             onClick={() => {
-                              const input = document.createElement("input");
-                              input.type = "file";
-                              input.accept = "image/*,video/*";
-                              input.onchange = (e) => {
-                                const file = (e.target as HTMLInputElement)
-                                  .files?.[0];
-                                if (file)
-                                  uploadMediaForQuestion(question, file);
-                              };
-                              input.click();
+                              setMediaQuestion(question);
+                              setMediaUrlInput("");
                             }}
-                            className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                            className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
                           >
                             Add Media
                           </button>
                         )}
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div
                           className={`text-sm font-semibold ${
@@ -737,6 +727,142 @@ export default function QuestionsPage() {
           e.target.value = "";
         }}
       />
+      {/* Add Media URL Modal */}
+      {/* ✅ FIXED: Add Media Modal - Now supports BOTH file upload AND URL */}
+      {mediaQuestion && (
+        <div className="fixed inset-0 bg-black/30 bg-opacity-10 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-md p-6">
+            <h3 className="text-lg font-medium mb-4">Add Media</h3>
+
+            {/* File Upload Option */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload File
+              </label>
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    (window as any).tempMediaFile = file;
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload image or video file
+              </p>
+            </div>
+
+            {/* OR Divider */}
+            <div className="flex items-center gap-2 my-4">
+              <div className="flex-1 border-t border-gray-300"></div>
+              <span className="text-sm text-gray-500">OR</span>
+              <div className="flex-1 border-t border-gray-300"></div>
+            </div>
+
+            {/* URL Input Option */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Video URL
+              </label>
+              <input
+                type="text"
+                placeholder="YouTube, Vimeo, or direct video URL"
+                value={mediaUrlInput}
+                onChange={(e) => setMediaUrlInput(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Paste YouTube, Vimeo, or .mp4 video link
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setMediaQuestion(null);
+                  setMediaUrlInput("");
+                  (window as any).tempMediaFile = null;
+                }}
+                className="flex-1 border py-2 text-sm"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  const file = (window as any).tempMediaFile;
+                  const url = mediaUrlInput.trim();
+
+                  if (!file && !url) {
+                    alert("Please upload a file or enter a video URL");
+                    return;
+                  }
+
+                  let mediaUrl = null;
+                  let mediaType = null;
+
+                  // Handle file upload
+                  if (file) {
+                    const fileExt = file.name.split(".").pop();
+                    const fileName = `${
+                      mediaQuestion.id
+                    }_${Date.now()}.${fileExt}`;
+                    const filePath = `questions/${fileName}`;
+
+                    const { error: uploadError } = await supabase.storage
+                      .from("question-media")
+                      .upload(filePath, file);
+
+                    if (uploadError) {
+                      alert("Upload failed: " + uploadError.message);
+                      return;
+                    }
+
+                    const { data } = supabase.storage
+                      .from("question-media")
+                      .getPublicUrl(filePath);
+
+                    mediaUrl = data.publicUrl;
+                    mediaType = file.type.startsWith("video")
+                      ? "video"
+                      : "image";
+                  }
+                  // Handle URL
+                  else if (url) {
+                    mediaUrl = url;
+                    const isVideo =
+                      url.includes("youtube") ||
+                      url.includes("youtu.be") ||
+                      url.includes("vimeo") ||
+                      url.match(/\.(mp4|webm|ogg)$/i);
+                    mediaType = isVideo ? "video" : "image";
+                  }
+
+                  await supabase
+                    .from("questions")
+                    .update({
+                      media_url: mediaUrl,
+                      media_type: mediaType,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", mediaQuestion.id);
+
+                  setMediaQuestion(null);
+                  setMediaUrlInput("");
+                  (window as any).tempMediaFile = null;
+                  fetchQuestions();
+                }}
+                className="flex-1 bg-black text-white py-2 text-sm"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -764,6 +890,10 @@ function QuestionModal({
     correct_answer: question?.correct_answer ?? "A",
     explanation: question?.explanation || "",
   });
+  //
+  const [videoUrl, setVideoUrl] = useState<string>(
+    question?.media_type === "video" ? question.media_url || "" : ""
+  );
 
   //
 
@@ -803,6 +933,11 @@ function QuestionModal({
 
     let mediaUrl = question?.media_url || null;
     let mediaType = question?.media_type || null;
+    // If video URL is provided, use it directly
+    if (videoUrl.trim()) {
+      mediaUrl = videoUrl.trim();
+      mediaType = "video";
+    }
 
     // Upload new media file if selected
     if (mediaFile) {
@@ -834,10 +969,11 @@ function QuestionModal({
     }
 
     // Remove media if explicitly cleared
-    if (!mediaFile && !mediaPreview) {
+    if (!mediaFile && !mediaPreview && !videoUrl.trim()) {
       mediaUrl = null;
       mediaType = null;
     }
+
     const questionData = {
       question: formData.question,
       option_a: formData.option_a,
@@ -923,50 +1059,6 @@ function QuestionModal({
             />
           </div>
 
-          {/* Media Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Media (Optional)
-            </label>
-
-            {mediaPreview ? (
-              <div className="space-y-2">
-                {question?.media_url ? (
-                  getVideoEmbed(
-                    mediaPreview,
-                    "w-full h-64 border border-gray-300"
-                  )
-                ) : mediaFile?.type.startsWith("video") ? (
-                  <video
-                    src={mediaPreview}
-                    controls
-                    className="w-full max-h-64 border border-gray-300"
-                  />
-                ) : (
-                  <img
-                    src={mediaPreview}
-                    alt="Preview"
-                    className="w-full max-h-64 object-contain border border-gray-300"
-                  />
-                )}
-                <button
-                  type="button"
-                  onClick={handleRemoveMedia}
-                  className="text-sm text-red-600 hover:text-red-800"
-                >
-                  Remove Media
-                </button>
-              </div>
-            ) : (
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-gray-900"
-              />
-            )}
-          </div>
-
           {/* Options */}
           <div className="space-y-4">
             <label className="block text-sm font-medium text-gray-700">
@@ -1037,6 +1129,73 @@ function QuestionModal({
               <option value="A">Option A</option>
               <option value="B">Option B</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Video URL (Optional)
+            </label>
+            <input
+              type="text"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="YouTube / Vimeo / mp4 URL"
+              className="w-full px-3 py-2 border border-gray-300 text-sm"
+            />
+          </div>
+
+          {/* Media Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Media (Optional)
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Upload a file OR enter a video URL below (not both)
+            </p>
+
+            {mediaPreview ? (
+              <div className="space-y-2">
+                {question?.media_url ? (
+                  getVideoEmbed(
+                    mediaPreview,
+                    "w-full h-64 border border-gray-300"
+                  )
+                ) : mediaFile?.type.startsWith("video") ? (
+                  <video
+                    src={mediaPreview}
+                    controls
+                    className="w-full max-h-64 border border-gray-300"
+                  />
+                ) : (
+                  <img
+                    src={mediaPreview}
+                    alt="Preview"
+                    className="w-full max-h-64 object-contain border border-gray-300"
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={handleRemoveMedia}
+                  className="text-sm text-red-600 hover:text-red-800"
+                >
+                  Remove Media
+                </button>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleFileChange}
+                  disabled={!!videoUrl.trim()}
+                  className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-gray-900 disabled:opacity-50 mb-3"
+                />
+                {videoUrl.trim() && (
+                  <p className="text-xs text-gray-500">
+                    File upload disabled because video URL is set
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           {/* Buttons */}

@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./components/Sidebar";
@@ -10,23 +9,25 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState("traffic-signs");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
-
-  // Check if current page is an auth page (login or signup)
   const isAuthPage = pathname?.startsWith("/auth");
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <div className="flex">
-          {/* Only show sidebar if NOT on auth pages */}
+        <div className="flex min-h-screen">
           {!isAuthPage && (
-            <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+            <Sidebar
+              isSidebarOpen={isSidebarOpen}
+              setIsSidebarOpen={setIsSidebarOpen}
+            />
           )}
 
-          {/* Remove left margin on auth pages for full width */}
-          <div className={`flex-1 ${!isAuthPage ? "ml-60" : ""}`}>
+          {/* Responsive padding for mobile header + desktop sidebar */}
+          <div
+            className={`flex-1 ${!isAuthPage ? "pt-14 lg:pt-0 lg:ml-64" : ""}`}
+          >
             {children}
           </div>
         </div>
