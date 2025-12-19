@@ -173,15 +173,15 @@ export default function UserActivityPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-8">
+      <div className="max-w-7xl mx-auto p-4 sm:p-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Activity className="w-5 h-5 text-blue-600" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 User Activity
               </h1>
               <p className="text-sm text-gray-500">
@@ -193,7 +193,7 @@ export default function UserActivityPage() {
         </div>
 
         {/* Filters Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-4 h-4 text-gray-500" />
             <h3 className="text-sm font-medium text-gray-900">Filters</h3>
@@ -279,23 +279,23 @@ export default function UserActivityPage() {
         ) : (
           <>
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <table className="min-w-[800px] w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         User
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Details
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -306,7 +306,7 @@ export default function UserActivityPage() {
                         key={activity.id}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${getActivityTypeColor(
                               activity.type
@@ -315,7 +315,7 @@ export default function UserActivityPage() {
                             {activity.type}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 text-gray-400" />
                             <span className="text-sm text-gray-700">
@@ -326,13 +326,13 @@ export default function UserActivityPage() {
                         <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate">
                           {activity.details || "—"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2 text-sm text-gray-500">
                             <Calendar className="w-4 h-4" />
                             {new Date(activity.created_at).toLocaleDateString()}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => handleDelete(activity.id)}
                             className="flex items-center gap-1 text-sm text-gray-600 hover:text-red-600 transition-colors"
@@ -350,8 +350,8 @@ export default function UserActivityPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6">
-                <p className="text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Showing {startIndex + 1}-
                   {Math.min(endIndex, filteredActivities.length)} of{" "}
                   {filteredActivities.length}
@@ -366,7 +366,8 @@ export default function UserActivityPage() {
                     className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
                   </button>
 
                   <div className="flex gap-1">
@@ -415,7 +416,8 @@ export default function UserActivityPage() {
                     disabled={currentPage === totalPages}
                     className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
+                    <span className="sm:hidden">Next</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -483,8 +485,8 @@ function ActivityForm({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg w-full max-w-lg shadow-xl">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+      <div className="bg-white rounded-lg w-full max-w-[95vw] sm:max-w-lg shadow-xl">
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
             {activity ? "Edit Activity" : "New Activity"}
           </h2>
@@ -496,7 +498,10 @@ function ActivityForm({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 sm:p-6 space-y-4 sm:space-y-5"
+        >
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Activity Type <span className="text-red-500">*</span>
